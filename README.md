@@ -7,3 +7,7 @@
 npm init --yes
 npm install apollo-server graphql
 ```
+
+- Development of src/index.js
+- Execute the server with
+  - node src/index.js
