@@ -11,3 +11,10 @@ npm install apollo-server graphql
 - Development of src/index.js
 - Execute the server with
   - node src/index.js
+
+```
+npm install nodemon -g
+npm install mongodb dotenv
+```
+
+- Development of ./.env
