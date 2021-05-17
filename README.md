@@ -28,3 +28,7 @@ query getMyTaskLists {
   }
 }
 ```
+
+```
+npm install bcryptjs
+```

@@ -1,6 +1,7 @@
 const { ApolloServer, gql } = require('apollo-server');
 const dotenv = require('dotenv');
 const { MongoClient } = require('mongodb');
+const bcrypt = require('bcryptjs');
 
 dotenv.config();
 
@@ -60,10 +61,26 @@ const resolvers = {
     myTaskLists: () => [],
   },
   Mutation: {
-    signUp: (_, { input }) => {
-      console.log(input);
+    signUp: async (_, { input }, { db }) => {
+      const hashedPassword = bcrypt.hashSync(input.password);
+      const newUser = {
+        ...input,
+        password: hashedPassword,
+      };
+      const result = await db.collection('Users').insert(newUser);
+      const user = result.ops[0];
+      return {
+        user,
+        token: 'token',
+      };
     },
     signIn: () => {},
+  },
+  User: {
+    // _id, when it comes from the DB
+    // id, when it comes from somewhere else
+    // the first parameter is the root, which we are destructuring it here
+    id: ({ _id, id }) => _id || id,
   },
 };
 
