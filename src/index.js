@@ -1,6 +1,6 @@
 const { ApolloServer, gql } = require('apollo-server');
 const dotenv = require('dotenv');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectID } = require('mongodb');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -9,7 +9,16 @@ dotenv.config();
 const { DB_URI, DB_NAME, JWT_SECRET } = process.env;
 
 const getToken = (user) =>
-  jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '30 days' });
+  jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '30 days' });
+
+const getUserFromToken = async (token, db) => {
+  if (!token) return null;
+  const tokenData = jwt.verify(token, JWT_SECRET);
+  if (!tokenData?.id) {
+    return null;
+  }
+  return await db.collection('Users').findOne({ _id: ObjectID(tokenData.id) });
+};
 
 const typeDefs = gql`
   type Query {
@@ -121,7 +130,14 @@ const start = async () => {
   // schema definition
   // set of resolvers
   // context that will be passed on every Query and Mutations
-  const server = new ApolloServer({ typeDefs, resolvers, context });
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context: async ({ req }) => {
+      const user = await getUserFromToken(req.headers.authorization, db);
+      return { db, user };
+    },
+  });
 
   // The `listen` method launches a web server.
   server.listen().then(({ url }) => {
