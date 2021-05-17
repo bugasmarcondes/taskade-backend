@@ -18,3 +18,13 @@ npm install mongodb dotenv
 ```
 
 - Development of ./.env
+
+- Test in playground
+
+```
+query getMyTaskLists {
+  myTaskLists {
+    id
+  }
+}
+```
