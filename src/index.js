@@ -2,8 +2,14 @@ const { ApolloServer, gql } = require('apollo-server');
 const dotenv = require('dotenv');
 const { MongoClient } = require('mongodb');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 dotenv.config();
+
+const { DB_URI, DB_NAME, JWT_SECRET } = process.env;
+
+const getToken = (user) =>
+  jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '30 days' });
 
 const typeDefs = gql`
   type Query {
@@ -71,7 +77,7 @@ const resolvers = {
       const user = result.ops[0];
       return {
         user,
-        token: 'token',
+        token: getToken(user),
       };
     },
     signIn: async (_, { input }, { db }) => {
@@ -88,7 +94,7 @@ const resolvers = {
       }
       return {
         user,
-        token: 'token',
+        token: getToken(user),
       };
     },
   },
@@ -99,8 +105,6 @@ const resolvers = {
     id: ({ _id, id }) => _id || id,
   },
 };
-
-const { DB_URI, DB_NAME } = process.env;
 
 const start = async () => {
   const client = new MongoClient(DB_URI, {

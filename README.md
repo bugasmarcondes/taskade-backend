@@ -21,4 +21,5 @@ npm install mongodb dotenv
 
 ```
 npm install bcryptjs
+npm install jsonwebtoken
 ```
