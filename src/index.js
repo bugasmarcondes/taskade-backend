@@ -75,7 +75,16 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    myTaskLists: () => [],
+    // parent, args, context, info
+    myTaskLists: async (parent, args, { db, user }) => {
+      if (!user) {
+        throw new Error('Invalid credentials');
+      }
+      return await db
+        .collection('TaskList')
+        .find({ userIds: user._id })
+        .toArray();
+    },
   },
   Mutation: {
     signUp: async (_, { input }, { db }) => {
