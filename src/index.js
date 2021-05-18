@@ -26,8 +26,10 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    signUp(input: SignUpInput): AuthUser!
-    signIn(input: SignInInput): AuthUser!
+    signUp(input: SignUpInput!): AuthUser!
+    signIn(input: SignInInput!): AuthUser!
+
+    createTaskList(title: String!): TaskList!
   }
 
   input SignUpInput {
@@ -106,12 +108,33 @@ const resolvers = {
         token: getToken(user),
       };
     },
+    createTaskList: async (_, { title }, { db, user }) => {
+      if (!user) throw new Error('Authentication error. Please sign in');
+      const newTaskList = {
+        title,
+        createdAt: new Date().toISOString(),
+        userIds: [user._id],
+      };
+      const result = await db.collection('TaskList').insert(newTaskList);
+      return result.ops[0];
+    },
   },
   User: {
     // _id, when it comes from the DB
     // id, when it comes from somewhere else
     // the first parameter is the root, which we are destructuring it here
     id: ({ _id, id }) => _id || id,
+  },
+  TaskList: {
+    id: ({ _id, id }) => _id || id,
+    progress: () => 0,
+    users: async ({ userIds }, _, { db }) => {
+      return await Promise.all(
+        userIds.map((userId) => {
+          return db.collection('Users').findOne({ _id: userId });
+        })
+      );
+    },
   },
 };
 
