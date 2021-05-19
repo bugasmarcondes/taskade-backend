@@ -37,6 +37,7 @@ const typeDefs = gql`
 
     createToDo(content: String!, taskListId: ID!): ToDo!
     updateToDo(id: ID!, content: String, isCompleted: Boolean): ToDo!
+    deleteToDo(id: ID!): Boolean!
   }
 
   input SignUpInput {
@@ -198,6 +199,15 @@ const resolvers = {
         .collection('ToDo')
         .updateOne({ _id: ObjectID(args.id) }, { $set: args });
       return await db.collection('ToDo').findOne({ _id: ObjectID(args.id) });
+    },
+    deleteToDo: async (parent, args, context) => {
+      const { id } = args;
+      const { db, user } = context;
+      if (!user) throw new Error('Authentication error. Please sign in');
+      const result = await db
+        .collection('ToDo')
+        .removeOne({ _id: ObjectID(id) });
+      return true;
     },
   },
   User: {
