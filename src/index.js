@@ -207,6 +207,14 @@ const resolvers = {
         })
       );
     },
+    todos: async (parent, args, context) => {
+      const { _id } = parent;
+      const { db } = context;
+      return await db
+        .collection('ToDo')
+        .find({ taskListId: ObjectID(_id) })
+        .toArray();
+    },
   },
   ToDo: {
     id: ({ _id, id }) => _id || id,
