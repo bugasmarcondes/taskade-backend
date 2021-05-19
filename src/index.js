@@ -34,6 +34,8 @@ const typeDefs = gql`
     updateTaskList(id: ID!, title: String!): TaskList!
     deleteTaskList(id: ID!): Boolean!
     addUserToTaskList(taskListId: ID!, userId: ID!): TaskList!
+
+    createToDo(content: String!, taskListId: ID!): ToDo!
   }
 
   input SignUpInput {
@@ -176,6 +178,18 @@ const resolvers = {
       taskList.userIds.push(ObjectID(userId));
       return taskList;
     },
+    createToDo: async (parent, args, context) => {
+      const { content, taskListId } = args;
+      const { db, user } = context;
+      if (!user) throw new Error('Authentication error. Please sign in');
+      const newToDo = {
+        content,
+        taskListId: ObjectID(taskListId),
+        isCompleted: false,
+      };
+      const result = await db.collection('ToDo').insert(newToDo);
+      return result.ops[0];
+    },
   },
   User: {
     // _id, when it comes from the DB
@@ -192,6 +206,16 @@ const resolvers = {
           return db.collection('Users').findOne({ _id: userId });
         })
       );
+    },
+  },
+  ToDo: {
+    id: ({ _id, id }) => _id || id,
+    taskList: async (parent, args, context) => {
+      const { taskListId } = parent;
+      const { db } = context;
+      return await db
+        .collection('TaskList')
+        .findOne({ _id: ObjectID(taskListId) });
     },
   },
 };
