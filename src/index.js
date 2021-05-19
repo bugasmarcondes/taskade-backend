@@ -31,6 +31,7 @@ const typeDefs = gql`
 
     createTaskList(title: String!): TaskList!
     updateTaskList(id: ID!, title: String!): TaskList!
+    deleteTaskList(id: ID!): Boolean!
   }
 
   input SignUpInput {
@@ -136,6 +137,15 @@ const resolvers = {
         .collection('TaskList')
         .updateOne({ _id: ObjectID(id) }, { $set: { title } });
       return await db.collection('TaskList').findOne({ _id: ObjectID(id) });
+    },
+    deleteTaskList: async (parent, args, context) => {
+      const { id } = args;
+      const { db, user } = context;
+      if (!user) throw new Error('Authentication error. Please sign in');
+      const result = await db
+        .collection('TaskList')
+        .removeOne({ _id: ObjectID(id) });
+      return true;
     },
   },
   User: {
